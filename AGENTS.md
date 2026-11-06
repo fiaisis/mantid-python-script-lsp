@@ -117,7 +117,8 @@ test/                          Pytest suite, mirroring the package. Mantid is no
 container/                     Dockerfile (mantid_python_script_lsp.D), FROM a pinned runner tag
 spike/                         Measurement scripts whose output is README.md's "Measurements"
                                section; spike/corpus/ is generated and gitignored — see "The corpus"
-.github/workflows/             tests.yml (PR checks), build-and-push.yml (main only, edits ../gitops)
+.github/workflows/             tests.yml (PR checks), build-and-push.yml (main only, edits ../gitops),
+                               image-scan.yml (nightly Trivy); dependabot.yml lives alongside them
 README.md                      Endpoints, contract ownership, measurements, configuration, how to run
 pyproject.toml, mypy.ini       Dependencies and ruff/mypy/pytest config
 ```
@@ -130,6 +131,10 @@ pyproject.toml, mypy.ini       Dependencies and ruff/mypy/pytest config
 | --- | --- | --- |
 | `tests.yml` | every push and PR | `pytest` with branch coverage, then `ruff format --check`, `ruff check`, `mypy --strict`. Plain Python, no Mantid — the suite stubs the framework, which is only possible because nothing imports it at module scope. |
 | `build-and-push.yml` | push to `main` only | Builds `container/mantid_python_script_lsp.D`, pushes to `ghcr.io/fiaisis/mantid-python-script-lsp`, then commits the new **digest** into the staging manifest in `../gitops`, like every other FIA service. |
+| `image-scan.yml` | nightly, and on demand | Builds the image and runs Trivy, failing on fixable vulnerabilities and uploading SARIF to the Security tab. Nightly because the findings are mostly the base image's Debian packages, and what changes is their disclosure dates. |
+
+Dependabot is configured as it is in `../FIA-API`: weekly `python-packages`, daily `action-packages`.
+Every action in these workflows is pinned by SHA, which is what lets that daily group do its job.
 
 Consequences an agent should know:
 
@@ -139,11 +144,10 @@ Consequences an agent should know:
 - The publish workflow edits `../gitops`, so it fails until that component's staging manifest exists at
   `components/mantid-python-script-lsp/envs/staging/mantid-python-script-lsp.yml` with a container named
   `mantid-python-script-lsp`. Creating those manifests is a prerequisite for a green first run on `main`.
-- Image scanning, scorecards, CodeQL and the corpus-in-CI job are not written yet. When they are, copy the
-  sibling repositories' workflow files rather than inventing a house style — they are already consistent
-  across FIA, and Dependabot's `action-packages` group expects the SHA-pinned actions both workflows here
-  use.
-- Dependabot is not configured for this repository yet.
+- CodeQL, dependency review, scorecards and the corpus-in-CI job are not written yet. When they are, copy
+  the sibling repositories' workflow files rather than inventing a house style — they are already
+  consistent across FIA, and Dependabot's `action-packages` group expects the SHA-pinned actions all
+  three workflows here already use.
 
 ## pyproject.toml — read this first
 
@@ -415,8 +419,8 @@ changed** — skip them for `.md`-only changes. When you do change Python, depen
 
 ## Handling Dependabot PRs
 
-Dependabot is not configured for this repo yet. When it is added, expect the two dangerous categories,
-and neither is a routine bump:
+Dependabot opens `python-packages` weekly and `action-packages` daily, per `.github/dependabot.yml`.
+Most are routine; two are not, and neither should be merged on a green check alone:
 
 - **The runner base image tag** (`ARG RUNNER_TAG` in `container/mantid_python_script_lsp.D`): changing
   it changes which names scripts may use, what pyflakes knows, and the cost of warm-up. Bump it
