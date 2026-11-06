@@ -398,8 +398,17 @@ changed** — skip them for `.md`-only changes. When you do change Python, depen
    snake_case.
 3. **PR description**: the org-wide template from `fiaisis/.github` — `Closes # <Issue Number>` then
    `## Description`. Ask the user for the issue number if it isn't evident, or confirm there is none.
-4. **AI-assistance label**: attach the repo's AI label (`gh label list` first; create `AI` with
-   `gh label create "AI" --description "Created with the assistance of AI"` if absent).
+4. **AI-assistance label — apply it yourself, every time.** A pull request you opened was made with the
+   assistance of AI, so label it `AI` as you create it rather than leaving it for a human to notice:
+   ```shell
+   gh pr create --label AI ...                       # at creation
+   gh pr edit <number> --add-label AI                # if the PR is already open
+   ```
+   The repository carries the same label set as `../FIA-API` (`AI`, `dependencies`, `github_actions`,
+   `python`, `waiting_on_something` plus the GitHub defaults), so nothing normally needs creating. Check
+   with `gh label list -R fiaisis/mantid-python-script-lsp` first, and if a label genuinely is missing,
+   create it with FIA-API's exact name, colour and description rather than inventing one — a label with a
+   different colour per repository is a label nobody can scan at a glance.
 5. **Contract changes**: open the PRs in `../FIA-API` and `../frontend` alongside, and say in each
    description which direction the change is compatible in, so the three can be merged in an order
    that never breaks an older client.
