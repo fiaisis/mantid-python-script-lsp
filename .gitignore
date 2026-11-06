@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+
+# Built by spike/make_corpus.py from scripts pulled off a live FIA API. That is facility
+# data-reduction code, so it stays out of the repository even though the generator is checked in.
+spike/corpus/
