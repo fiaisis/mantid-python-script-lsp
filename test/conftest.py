@@ -30,7 +30,21 @@ WARM_TIMEOUT_SECONDS = 5.0
 # What the stub framework "exposes". Scripts in tests are written against these: the real service binds
 # roughly 1,800 names from the live framework, and the point of the stub is that a test states which
 # names exist rather than depending on a 2 GB package being installed.
-STUB_FRAMEWORK_NAMES = ("Load", "CreateSampleWorkspace", "AnalysisDataService", "MergeMD", "mtd", "np")
+STUB_FRAMEWORK_NAMES = (
+    "Load",
+    "SaveNexus",
+    "CreateSampleWorkspace",
+    "ConvertUnits",
+    "Rebin",
+    "Scale",
+    "BinMD",
+    "MergeMD",
+    "AnalysisDataService",
+    "ConfigService",
+    "config",
+    "mtd",
+    "np",
+)
 
 
 @pytest.fixture

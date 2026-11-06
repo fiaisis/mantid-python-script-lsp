@@ -144,10 +144,10 @@ Consequences an agent should know:
 - The publish workflow edits `../gitops`, so it fails until that component's staging manifest exists at
   `components/mantid-python-script-lsp/envs/staging/mantid-python-script-lsp.yml` with a container named
   `mantid-python-script-lsp`. Creating those manifests is a prerequisite for a green first run on `main`.
-- CodeQL, dependency review, scorecards and the corpus-in-CI job are not written yet. When they are, copy
-  the sibling repositories' workflow files rather than inventing a house style — they are already
-  consistent across FIA, and Dependabot's `action-packages` group expects the SHA-pinned actions all
-  three workflows here already use.
+- CodeQL, dependency review and scorecards are not written yet. When they are, copy the sibling
+  repositories' workflow files rather than inventing a house style — they are already consistent across
+  FIA, and Dependabot's `action-packages` group expects the SHA-pinned actions all three workflows here
+  already use.
 
 ## pyproject.toml — read this first
 
