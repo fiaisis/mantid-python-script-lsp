@@ -1,0 +1,27 @@
+---
+# Same grouping as ../FIA-API: one PR a week for Python, one a day for Actions.
+#
+# The base image is not Dependabot's to bump. `ARG RUNNER_TAG` in
+# `container/mantid_python_script_lsp.D` decides which names a script may use, what warm-up costs and
+# which algorithms exist, so moving it means the corpus check and a fresh set of measurements - see
+# AGENTS.md, "Handling Dependabot PRs".
+
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      python-packages:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    groups:
+      action-packages:
+        patterns:
+          - "*"

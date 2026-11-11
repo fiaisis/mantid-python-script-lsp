@@ -1,0 +1,61 @@
+---
+name: Build and Push Docker Images
+
+# Only main publishes: the tag that gets promoted by GitOps is the digest of a commit on main, so a
+# branch build has nowhere to go. This is the same shape as the other FIA services' publish workflows
+# (build, push, then pin the new digest into the staging manifest in ../gitops).
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.WRITE_PACKAGE_TOKEN }}
+
+      - name: Build and push mantid-python-script-lsp Docker image
+        id: docker_build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+        with:
+          file: ./container/mantid_python_script_lsp.D
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/mantid-python-script-lsp
+
+      - name: Checkout the Gitops repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: fiaisis/gitops
+          token: ${{ secrets.GITOPS_STAGING_EDIT_TOKEN }}
+
+      # The image is pinned by digest, not by tag, so a rebuild of the same content cannot silently move
+      # staging, and ArgoCD sees a real diff on every deploy.
+      - name: Edit the YAML mantid-python-script-lsp file for staging
+        uses: mikefarah/yq@59f7969b49b1d9608a37f7db006ce78f0610263e # v4.54.1
+        with:
+          cmd: yq e -i '.spec.template.spec.containers[] |= select(.name == "mantid-python-script-lsp").image = "ghcr.io/fiaisis/mantid-python-script-lsp@${{ steps.docker_build.outputs.digest }}"' './components/mantid-python-script-lsp/envs/staging/mantid-python-script-lsp.yml'
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -am "[CD] Update mantid-python-script-lsp with this commit ${{ github.event.head_commit.url}}"
+          git push
